@@ -1,14 +1,9 @@
 import { Suspense } from 'react';
-import {
-  useRouteLoaderData,
-  json,
-  redirect,
-  defer,
-  Await,
-} from 'react-router-dom';
+import { useRouteLoaderData, json, redirect, defer, Await } from 'react-router-dom';
 
 import EventItem from '../components/EventItem';
 import EventsList from '../components/EventsList';
+import { getAuthToken } from '../util/auth';
 
 function EventDetailPage() {
   const { event, events } = useRouteLoaderData('event-detail');
@@ -39,7 +34,7 @@ async function loadEvent(id) {
       { message: 'Could not fetch details for selected event.' },
       {
         status: 500,
-      }
+      },
     );
   } else {
     const resData = await response.json();
@@ -59,7 +54,7 @@ async function loadEvents() {
       { message: 'Could not fetch events.' },
       {
         status: 500,
-      }
+      },
     );
   } else {
     const resData = await response.json();
@@ -78,8 +73,14 @@ export async function loader({ request, params }) {
 
 export async function action({ params, request }) {
   const eventId = params.eventId;
+  const token = getAuthToken();
+
   const response = await fetch('http://localhost:8080/events/' + eventId, {
     method: request.method,
+    // ! here we need to add our token to headers to enable access to backend and to delete an item
+    headers: {
+      Authorization: 'Bearer ' + token,
+    },
   });
 
   if (!response.ok) {
@@ -87,7 +88,7 @@ export async function action({ params, request }) {
       { message: 'Could not delete event.' },
       {
         status: 500,
-      }
+      },
     );
   }
   return redirect('/events');
